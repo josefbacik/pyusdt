@@ -1,0 +1,3 @@
+[submodule "usdt"]
+	path = usdt
+	url = https://github.com/libbpf/usdt.git
