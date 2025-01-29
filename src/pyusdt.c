@@ -10,7 +10,7 @@ static PyObject *pyusdt_trace_start(PyObject *self, PyObject *args)
 		Py_RETURN_NONE;
 
 	if (!PyArg_ParseTuple(args, "i", &loop))
-		Py_RETURN_NONE;
+		return NULL;
 
 	USDT_WITH_SEMA(pyusdt, start_loop, loop);
 	Py_RETURN_NONE;
@@ -24,7 +24,7 @@ static PyObject *pyusdt_trace_end(PyObject *self, PyObject *args)
 		Py_RETURN_NONE;
 
 	if (!PyArg_ParseTuple(args, "i", &loop))
-		Py_RETURN_NONE;
+		return NULL;
 
 	USDT_WITH_SEMA(pyusdt, stop_loop, loop);
 	Py_RETURN_NONE;
