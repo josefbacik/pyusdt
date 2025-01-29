@@ -46,8 +46,65 @@ for this
 
 ```bash
 $ make
-$ python src/loop-ctypes.py &
+$ cd src
+$ python loop-ctypes.py &
 $ sudo bpftrace -e 'usdt:*:ctypes_usdt:start_loop { printf("loop is %d pid %d\n", arg0, pid); }'
-$ python src/loop-extension-module.py &
+$ python loop-extension-module.py &
 $ sudo bpftrace -e 'usdt:*:pyusdt:start_loop { printf("loop is %d pid %d\n", arg0, pid); }'
 ```
+
+## Benchmarking
+
+The tracepoints aren't free, and their cost will greatly depend on the BPF
+program attached to the tracepoint. However they are mostly free when they are
+off, and there's slight variations on their cost depending on the implementation
+you decide to use.  The `benchmark.py` script is a simple script that runs
+100,000 loops of calculating 1000 digits of pi, with a tracepoint at the start
+and end of the loop, while increasing a loop counter to print out.  This is a
+microbenchmark, and should be taken with a grain of salt, but is useful for
+showing the low cost of the tracepoints.
+
+1. **Method 1**.  This is with the following `bpftrace` command running
+
+```
+usdt:*:ctypes_usdt:start_loop
+usdt:*:pyusdt:start_loop
+{
+  @start[pid] = nsecs;
+}
+
+usdt:*:ctypes_usdt:end_loop
+usdt:*:pyusdt:end_loop
+/@start[pid]/
+{
+  @total[pid] += nsecs - @start[pid];
+}
+
+and the results on my machine are as follows
+
+```bash
+$ python benchmark.py
+My pid is 1443398, press enter to start benchmark
+module: 6.061789590865374
+ctypes: 6.116902083158493
+plain: 5.8920358046889305
+```
+
+The `module` is the time it takes to run the python extension module, `ctypes`
+is the simpler ctypes module.  As you can see there's an overhead to using the
+`ctypes` method, on top of the overhead of the tracepoint itself.  The `module`
+has a 2.8% overhead, while the `ctypes` method has a 3.8% overhead.
+
+2. **Method 2**.  This is with no `bpftrace` command running, so the tracepoints
+   are disabled, so the values represent the overhead of the tracepoints
+   existing without being used.
+
+```bash
+$ python benchmark.py
+module: 5.875723026692867
+ctypes: 5.916282083839178
+plain: 5.882706586271524
+```
+
+The `module` case is faster than the `plain` case, so we can generally assume
+that the overhead of the tracepoints when disabled is negligible if not zero.
