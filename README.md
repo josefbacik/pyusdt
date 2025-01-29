@@ -47,7 +47,7 @@ for this
 ```bash
 $ make
 $ python src/loop-ctypes.py &
-$ sudo bpftrace -e usdt:*:ctypes_usdt:start_loop { printf("loop is %d pid %d\n", arg0, pid); }'
+$ sudo bpftrace -e 'usdt:*:ctypes_usdt:start_loop { printf("loop is %d pid %d\n", arg0, pid); }'
 $ python src/loop-extension-module.py &
 $ sudo bpftrace -e 'usdt:*:pyusdt:start_loop { printf("loop is %d pid %d\n", arg0, pid); }'
 ```
