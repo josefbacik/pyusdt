@@ -79,6 +79,7 @@ usdt:*:pyusdt:end_loop
 {
   @total[pid] += nsecs - @start[pid];
 }
+```
 
 and the results on my machine are as follows
 
